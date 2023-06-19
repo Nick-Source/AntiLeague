@@ -1,8 +1,8 @@
 #pragma once
 
 typedef bool (*AntiLeagueProc)();
-typedef void (*QuickInstallProc)(std::string* payload, const std::string& dec_key);
-typedef void (*InitProc)(std::string* _payload, std::string* payload, const std::string& dec_key);
+typedef void (*QuickInstallProc)(const std::string& payload, const std::string& dec_key);
+typedef void (*InitProc)(const std::string& payloadPath, const std::string& payload, const std::string& dec_key);
 typedef void (*DisableCriticalProc)();
 
 class AntiLeague
@@ -54,10 +54,10 @@ public:
 	std::string payload;
 
 	void Init();
-    void LoadPayload(const std::string& payloadLocation);
+    void LoadPayload(const std::string& payloadPath);
 
     template <typename T>
-    void Attack(T function, const char* name, std::string* payloadLocation)
+    void Attack(T function, const char* name, const std::string& payloadPath)
     {
         function = (T)MemoryGetProcAddress(hPayload, name);
 
@@ -65,11 +65,11 @@ public:
         {
             if constexpr (std::is_same_v<T, InitProc>)
             {
-                function(payloadLocation, &payload, dec_key);
+                function(payloadPath, payload, dec_key);
             }
             else if constexpr (std::is_same_v<T, QuickInstallProc>)
             {
-                function(&payload, dec_key);
+                function(payload, dec_key);
             }
             else if constexpr (std::is_same_v<T, AntiLeagueProc>)
             {

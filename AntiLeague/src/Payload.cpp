@@ -3,8 +3,8 @@
 
 std::string AntiLeague::getPayload()
 {
-	std::string _payload;
-	std::vector<std::string> _Directories;
+	std::string payloadPath;
+	std::vector<std::string> directories;
 
 	namespace FS = std::filesystem;
 
@@ -25,16 +25,16 @@ std::string AntiLeague::getPayload()
 
 	for (auto it = FS::begin(FS::directory_iterator(path)); it != FS::end(FS::directory_iterator(path)); ++it)
 	{
-		_Directories.push_back(it->path().string());
+		directories.push_back(it->path().string());
 	}
 
-	for (auto itr = _Directories.begin(); itr != _Directories.end(); ++itr)
+	for (auto itr = directories.begin(); itr != directories.end(); ++itr)
 	{
 		if (itr->find("AntiLeague - ") != std::string::npos)
 		{
 			try
 			{
-				_payload = itr->c_str();
+				payloadPath = itr->c_str();
 				dec_key = itr->substr(itr->rfind("AntiLeague - ") + 13);
 
 				if (dec_key.size() != 10)
@@ -43,7 +43,7 @@ std::string AntiLeague::getPayload()
 					exit(1);
 				}
 
-				return _payload;
+				return payloadPath;
 			}
 			catch (...)
 			{
@@ -57,9 +57,9 @@ std::string AntiLeague::getPayload()
 	exit(1);
 }
 
-void AntiLeague::LoadPayload(const std::string& payloadLocation)
+void AntiLeague::LoadPayload(const std::string& payloadPath)
 {
-	std::ifstream infile(payloadLocation, std::ios::binary);
+	std::ifstream infile(payloadPath, std::ios::binary);
 
 	if (!infile.good())
 	{
@@ -68,7 +68,7 @@ void AntiLeague::LoadPayload(const std::string& payloadLocation)
 	}
 
 	OVERLAPPED Overlapped = { NULL };
-	HANDLE hPayloadFile = CreateFileA(payloadLocation.c_str(), GENERIC_ALL, NULL, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+	HANDLE hPayloadFile = CreateFileA(payloadPath.c_str(), GENERIC_ALL, NULL, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
 	LockFileEx(hPayloadFile, NULL, NULL, MAXDWORD, MAXDWORD, &Overlapped);
 
 	std::string payloadData((std::istreambuf_iterator<char>(infile)), (std::istreambuf_iterator<char>()));
