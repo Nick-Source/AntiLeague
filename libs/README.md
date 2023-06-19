@@ -3,3 +3,4 @@
 |Libraries       |
 |----------------|
 |MemoryModule.lib|
+|SEH.lib         |
