@@ -11,7 +11,7 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="src\Install.cpp" />
+    <ClCompile Include="src\install.cpp" />
     <ClCompile Include="src\payload.cpp" />
     <ClCompile Include="src\stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
@@ -19,7 +19,7 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="src\Install.h" />
+    <ClInclude Include="src\install.h" />
     <ClInclude Include="src\payload.h" />
     <ClInclude Include="src\stdafx.h" />
   </ItemGroup>
