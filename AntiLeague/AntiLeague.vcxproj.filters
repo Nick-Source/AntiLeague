@@ -15,13 +15,13 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="src\AntiLeague.cpp">
+    <ClCompile Include="src\antileague.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\Payload.cpp">
+    <ClCompile Include="src\payload.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\Utils.cpp">
+    <ClCompile Include="src\utils.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\stdfax.cpp">
@@ -35,7 +35,7 @@
     <ClInclude Include="src\stdafx.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\AntiLeague.h">
+    <ClInclude Include="src\antileague.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
