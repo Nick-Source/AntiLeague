@@ -27,7 +27,7 @@
     <ClCompile Include="src\AntiLeague.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\Path.cpp">
+    <ClCompile Include="src\Payload.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="src\Utils.cpp">

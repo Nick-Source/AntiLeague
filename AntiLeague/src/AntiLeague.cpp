@@ -3,12 +3,10 @@
 
 int APIENTRY wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmdLine, int nCmdShow)
 {
-	c_AntiLeague cAntiLeague = c_AntiLeague::getInstance();
-	cAntiLeague.Init();
+	c_AntiLeague& cAntiLeague = c_AntiLeague::getInstance();
 
-	for (;;)
-	{
-		cAntiLeague.Attack<AntiLeagueProc>(AntiLeagueProc(), "AntiLeague", NULL);
-		cAntiLeague.FreeLibrary();
-	}
+	cAntiLeague.Init();
+	cAntiLeague.Attack<AntiLeagueProc>(AntiLeagueProc(), "AntiLeague", NULL);
+
+	return 0;
 }
