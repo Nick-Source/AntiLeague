@@ -1,14 +1,11 @@
 #pragma once
-#include <string>
-#include <Windows.h>
-#include "MemoryModule.h"
 
 typedef bool (*AntiLeagueProc)();
 typedef void (*QuickInstallProc)(std::string* payload, const std::string& dec_key);
 typedef void (*InitProc)(std::string* _payload, std::string* payload, const std::string& dec_key);
 typedef void (*DisableCriticalProc)();
 
-class c_AntiLeague
+class AntiLeague
 {
 private:
     HMEMORYMODULE hPayload;
@@ -20,7 +17,7 @@ private:
     HWND hWnd;
     HANDLE SafeShutdown;
 
-	c_AntiLeague()
+    AntiLeague()
 		: hPayload(NULL), hWnd(NULL), SafeShutdown(NULL)
 	{
 		HANDLE hMutex = CreateMutex(NULL, TRUE, L"AntiLeague");
@@ -31,7 +28,7 @@ private:
 		}
 	}
 
-    ~c_AntiLeague()
+    ~AntiLeague()
     {
         SendMessage(hWnd, WM_QUIT, 1, NULL);
         WaitForSingleObject(SafeShutdown, INFINITE);
@@ -47,9 +44,9 @@ private:
     friend LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
 public:
-	static c_AntiLeague& getInstance()
+	static AntiLeague& getInstance()
 	{
-		static c_AntiLeague instance;
+		static AntiLeague instance;
 		return instance;
 	}
 

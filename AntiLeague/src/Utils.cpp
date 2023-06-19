@@ -1,9 +1,9 @@
-#include "MemoryModule.h"
-#include "c_AntiLeague.h"
+#include "stdafx.h"
+#include "AntiLeague.h"
 
 EXTERN_C IMAGE_DOS_HEADER __ImageBase;
 
-void c_AntiLeague::cipher()
+void AntiLeague::cipher()
 {
     if (dec_key.empty())
     {
@@ -15,7 +15,7 @@ void c_AntiLeague::cipher()
         payload[i] ^= dec_key[i % dec_key.size()];
 }
 
-void c_AntiLeague::gen_dec_key()
+void AntiLeague::gen_dec_key()
 {
     static const char alphanum[] =
         "0123456789"
@@ -28,7 +28,7 @@ void c_AntiLeague::gen_dec_key()
 
 LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
-    c_AntiLeague& AntiLeague = c_AntiLeague::getInstance();
+    AntiLeague& AntiLeague = AntiLeague::getInstance();
 
     if (msg != WM_ENDSESSION)
     {
@@ -63,7 +63,7 @@ DWORD WINAPI SafeShutdown(LPVOID event)
         return 1;
     }
 
-    HWND& hWnd = c_AntiLeague::getInstance().hWnd;
+    HWND& hWnd = AntiLeague::getInstance().hWnd;
     hWnd = CreateWindowEx(0, name, name, NULL, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, NULL, NULL, (HINSTANCE)&__ImageBase, NULL);
 
     if (hWnd == NULL)
@@ -85,7 +85,7 @@ DWORD WINAPI SafeShutdown(LPVOID event)
     return msg.wParam;
 }
 
-void c_AntiLeague::Init()
+void AntiLeague::Init()
 {
     std::string payloadLocation = getPayload();
     LoadPayload(payloadLocation);

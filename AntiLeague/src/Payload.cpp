@@ -1,8 +1,7 @@
-#include <fstream>
-#include <filesystem>
-#include "c_AntiLeague.h"
+#include "stdafx.h"
+#include "AntiLeague.h"
 
-std::string c_AntiLeague::getPayload()
+std::string AntiLeague::getPayload()
 {
 	std::string _payload;
 	std::vector<std::string> _Directories;
@@ -58,7 +57,7 @@ std::string c_AntiLeague::getPayload()
 	exit(1);
 }
 
-void c_AntiLeague::LoadPayload(const std::string& payloadLocation)
+void AntiLeague::LoadPayload(const std::string& payloadLocation)
 {
 	std::ifstream infile(payloadLocation, std::ios::binary);
 
