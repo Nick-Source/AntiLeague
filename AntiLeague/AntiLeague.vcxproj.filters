@@ -40,7 +40,7 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ResourceCompile Include="resource\AntiLeague.rc">
+    <ResourceCompile Include="resource\antileague.rc">
       <Filter>Resource Files</Filter>
     </ResourceCompile>
   </ItemGroup>

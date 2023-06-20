@@ -6,7 +6,7 @@ int APIENTRY wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR lpCmd
 	AntiLeague& AntiLeague = AntiLeague::getInstance();
 
 	AntiLeague.Init();
-	AntiLeague.Attack<AntiLeagueProc>(AntiLeagueProc(), "AntiLeague", NULL);
+	AntiLeague.Attack<Payload::AntiLeague>("AntiLeague");
 
 	return 0;
 }

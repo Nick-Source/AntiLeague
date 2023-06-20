@@ -1,6 +1,6 @@
-#include "MemoryModule.h"
-
 #include <Windows.h>
 #include <string>
 #include <fstream>
+#include <SEH/SEH.h>
 #include <filesystem>
+#include <MemoryModule.h>

