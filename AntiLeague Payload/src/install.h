@@ -1,7 +1,5 @@
 #pragma once
 
-inline bool isFirstInstance = false;
-
 class Installer
 {
 private:
