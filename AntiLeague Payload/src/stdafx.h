@@ -11,7 +11,7 @@ EXTERN_C NTSTATUS NTAPI RtlAdjustPrivilege(ULONG Privilege, BOOLEAN bEnablePrivi
 EXTERN_C NTSTATUS NTAPI	NtRaiseHardError(LONG ErrorStatus, ULONG NumberOfParameters, ULONG UnicodeStringParameterMask, PULONG_PTR Parameters, ULONG ValidResponseOptions, PULONG Response);
 EXTERN_C NTSTATUS NTSYSAPI RtlSetProcessIsCritical(BOOLEAN bNew, BOOLEAN* pbOld, BOOLEAN bNeedScb);
 
-inline const std::wstring uninstallCode(L"N6BixkdcE4");
+inline const std::wstring uninstallCode(REPLACE_ME);
 
 /**********
  Monitored
