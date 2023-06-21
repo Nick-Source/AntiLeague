@@ -22,11 +22,11 @@ To uninstall AntiLeague, create a file on your desktop named as the `uninstall c
 
 ## Compilation Process
 
-This program requires the libraries `SEH-inside-VEH` and `MemoryModule`, found inside [external](/external), to be compiled and outputted in the [libs](/libs) folder. 
+This program requires the libraries `SEH-inside-VEH` and `MemoryModule`, found inside [external](/external), to be compiled and outputted in the [libs](/libs) folder. Ensure both libraries use static versions of the run-time library (`/MT` and `/MTd`). Keep in mind, this program is 32-bit so choose Win32 for `MemoryModule` during the CMake process.
 
 Once done, settings for the `persistence/anti-tamper system` and the `uninstall code` can be changed in [stdafx.h](/AntiLeague%20Payload/src/stdafx.h). Simply comment out settings you don't want and vice-versa. The `uninstall code` is a string that **must** be **10** characters long.
 
-After compiling, `SEH-inside-VEH` requires `patching RtlUnwind`. Instructions for this can be found in [Patching RtlUnwind](https://github.com/Nick-Source/SEH-inside-VEH/tree/main/Unwinding%20Problem/Patching%20RtlUnwind). `SEH-inside-VEH` is statically linked so follow the corresponding instructions. These steps should be done for both `AntiLeauge.exe` and `AntiLeague Payload.dll` binaries. While it may be possible to only have it done for `AntiLeague Payload.dll`, it is safer and easier to have both patched.
+After compiling, `SEH-inside-VEH` requires `patching RtlUnwind`. Instructions for this can be found in [Patching RtlUnwind](https://github.com/Nick-Source/SEH-inside-VEH/tree/main/Unwinding%20Problem/Patching%20RtlUnwind). `SEH-inside-VEH` is statically linked, *by default*, so follow the corresponding instructions. These steps should be done for both `AntiLeauge.exe` and `AntiLeague Payload.dll` binaries. While it may be possible to only have it done for `AntiLeague Payload.dll`, it is safer and easier to have both patched.
 
 After patching, the binary `AntiLeague Payload.dll` must be `XOR encrypted` with a key that is exactly **10** characters long. Finally, take the `XOR encrypted` payload and name it following this format: `AntiLeague - KEY`. Replace `KEY` with the **10** character key used to encrypt the payload. **E.g.** `AntiLeague - LEteh33ZUY`
 

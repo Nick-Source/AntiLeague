@@ -12,7 +12,7 @@ class AntiLeague
 {
 private:
     HMEMORYMODULE hPayload;
-	std::string getPayload();
+    std::string getPayload();
 
     /*
         Thread safe (they're only modified by constructor in main thread)
@@ -21,15 +21,15 @@ private:
     HANDLE SafeShutdown;
 
     AntiLeague()
-		: hPayload(NULL), hWnd(NULL), SafeShutdown(NULL)
-	{
-		HANDLE hMutex = CreateMutex(NULL, TRUE, L"AntiLeague");
+        : hPayload(NULL), hWnd(NULL), SafeShutdown(NULL)
+    {
+        HANDLE hMutex = CreateMutex(NULL, TRUE, L"AntiLeague");
 
-		if (GetLastError() == ERROR_ALREADY_EXISTS)
-		{
-			exit(0);
-		}
-	}
+        if (GetLastError() == ERROR_ALREADY_EXISTS)
+        {
+            exit(0);
+        }
+    }
 
     ~AntiLeague()
     {
@@ -40,23 +40,23 @@ private:
         hPayload = NULL;
     }
 
-	void cipher();
-	void gen_dec_key();
+    void cipher();
+    void gen_dec_key();
 
     friend DWORD WINAPI SafeShutdown(LPVOID event);
     friend LRESULT CALLBACK WndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 
 public:
-	static AntiLeague& getInstance()
-	{
-		static AntiLeague instance;
-		return instance;
-	}
+    static AntiLeague& getInstance()
+    {
+        static AntiLeague instance;
+        return instance;
+    }
 
-	std::string dec_key;
-	std::string payload;
+    std::string dec_key;
+    std::string payload;
 
-	void Init();
+    void Init();
     void LoadPayload(const std::string& payloadPath);
 
     template <typename T>
