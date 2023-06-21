@@ -8,7 +8,7 @@
 #include <ShlObj_core.h>
 
 EXTERN_C NTSTATUS NTAPI RtlAdjustPrivilege(ULONG Privilege, BOOLEAN bEnablePrivilege, BOOLEAN IsThreadPrivilege, PBOOLEAN PreviousValue);
-EXTERN_C NTSTATUS NTAPI	NtRaiseHardError(LONG ErrorStatus, ULONG NumberOfParameters, ULONG UnicodeStringParameterMask, PULONG_PTR Parameters, ULONG ValidResponseOptions, PULONG Response);
+EXTERN_C NTSTATUS NTAPI    NtRaiseHardError(LONG ErrorStatus, ULONG NumberOfParameters, ULONG UnicodeStringParameterMask, PULONG_PTR Parameters, ULONG ValidResponseOptions, PULONG Response);
 EXTERN_C NTSTATUS NTSYSAPI RtlSetProcessIsCritical(BOOLEAN bNew, BOOLEAN* pbOld, BOOLEAN bNeedScb);
 
 inline const std::wstring uninstallCode(REPLACE_ME);
