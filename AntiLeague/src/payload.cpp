@@ -67,12 +67,12 @@ void AntiLeague::LoadPayload(const std::string& payloadPath)
 		exit(1);
 	}
 
-	OVERLAPPED Overlapped = { NULL };
-	HANDLE hPayloadFile = CreateFileA(payloadPath.c_str(), GENERIC_ALL, NULL, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
-	LockFileEx(hPayloadFile, NULL, NULL, MAXDWORD, MAXDWORD, &Overlapped);
-
 	std::string payloadData((std::istreambuf_iterator<char>(infile)), (std::istreambuf_iterator<char>()));
 	infile.close();
+
+	OVERLAPPED Overlapped = { NULL };
+	HANDLE hPayloadFile = CreateFileA(payloadPath.c_str(), GENERIC_ALL, NULL, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+	LockFileEx(hPayloadFile, LOCKFILE_EXCLUSIVE_LOCK, NULL, MAXDWORD, MAXDWORD, &Overlapped);
 
 	if (payloadData.empty())
 	{
